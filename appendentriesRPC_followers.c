@@ -83,9 +83,9 @@ int transfer(
     // output_AERPC_A(AERPC_A);
 
     // consistency check
-    clock_gettime(CLOCK_MONOTONIC, &ts1);
+    // clock_gettime(CLOCK_MONOTONIC, &ts1);
     AERPC_R->success = consistency_check(AERPC_A, AS_PS, AS_VS);
-    clock_gettime(CLOCK_MONOTONIC, &ts2);
+    // clock_gettime(CLOCK_MONOTONIC, &ts2);
     AERPC_R->term = AS_PS->currentTerm;
     if (AERPC_R->success == false)
     {
@@ -99,7 +99,7 @@ int transfer(
     /* 受信した文字列を表示 */
     printf("replied to leader. Send AERPC_R\n");
 
-    t = ts2.tv_sec - ts1.tv_sec + (ts2.tv_nsec - ts1.tv_nsec) / 1e9;
+    // t = ts2.tv_sec - ts1.tv_sec + (ts2.tv_nsec - ts1.tv_nsec) / 1e9;
     // fprintf(timerec, "%.4f\n", t);
     // printf("CCCheck TIME: %.4f\n", t);
 

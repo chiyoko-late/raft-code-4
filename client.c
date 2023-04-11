@@ -56,11 +56,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    int i = 1;
+    printf("entry -> ");
+    scanf("%s", str);
     /* 接続済のソケットでデータのやり取り */
-    while (1)
+    while (i < 10)
     {
-        printf("new entry -> ");
-        scanf("%s", str);
+
+        printf("%d回目\n", i);
         /* leaderに送る */
         clock_gettime(CLOCK_MONOTONIC, &ts1);
         for (int i = 1; i < ONCE_SEND_ENTRIES; i++)
@@ -81,6 +84,7 @@ int main(int argc, char *argv[])
         fprintf(timerec, "%.4f\n", t);
         // fwrite(&t, sizeof(double), 1, timerec);
         printf("%.4f\n", t);
+        i++;
     }
 
     exit(0);

@@ -247,7 +247,7 @@ ACCEPT:
     for (int i = 1; i < (ALL_ACCEPTED_ENTRIES / ONCE_SEND_ENTRIES); i++)
     {
         printf("replicate start!\n");
-        clock_gettime(CLOCK_MONOTONIC, &ts1);
+        // clock_gettime(CLOCK_MONOTONIC, &ts1);
         for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
         {
             // clientから受け取り
@@ -274,7 +274,7 @@ ACCEPT:
         }
         my_send(sock_client, &result, sizeof(int) * 1);
 
-        clock_gettime(CLOCK_MONOTONIC, &ts2);
+        // clock_gettime(CLOCK_MONOTONIC, &ts2);
         t = ts2.tv_sec - ts1.tv_sec + (ts2.tv_nsec - ts1.tv_nsec) / 1e9;
 
         // fprintf(timerec, "%.4f\n", t);

@@ -16,10 +16,21 @@ int AppendEntriesRPC(
     /* AERPC_Aの設定 */
 
     AERPC_A->term = AS_PS->log[L_VS->nextIndex[0]].term;
-    // AERPC_A->term = 1;
-    AERPC_A->prevLogIndex = L_VS->nextIndex[0] - 1;
-    AERPC_A->prevLogTerm = AS_PS->log[AERPC_A->prevLogIndex].term;
-    // AERPC_A->prevLogTerm = 0;
+    for (int i = 0; i < ONCE_SEND_ENTRIES; i++)
+    {
+        // logが少なくとも1ONCE_SEND_ENTRIES分ないと、prevlogの処理がおかしくなるため場合わけ処理。
+        if (L_VS->nextIndex[0] < ONCE_SEND_ENTRIES)
+        {
+            AERPC_A->prevLogIndex[0 + i] = L_VS->nextIndex[0] - 1;
+            AERPC_A->prevLogTerm[0 + i] = AS_PS->log[AERPC_A->prevLogIndex[0 + i]].term;
+        }
+        else
+        {
+            AERPC_A->prevLogIndex[0 + i] = L_VS->nextIndex[0] - (ONCE_SEND_ENTRIES - i);
+            AERPC_A->prevLogTerm[0 + i] = AS_PS->log[AERPC_A->prevLogIndex[0 + i]].term;
+        }
+    }
+
     for (int i = 1; i < ONCE_SEND_ENTRIES; i++)
     {
         strcpy(AERPC_A->entries[i - 1].entry, AS_PS->log[L_VS->nextIndex[0] + (i - 1)].entry);
@@ -30,19 +41,12 @@ int AppendEntriesRPC(
 
     for (int i = 1; i <= connectserver_num; i++)
     {
-
         my_send(sock[i], AERPC_A, sizeof(struct AppendEntriesRPC_Argument));
-
-        // for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
-        // {
-        //     // send(sock[i], AERPC_A->entries[num - 1], sizeof(char) * MAX, 0);
-        //     my_send(sock[i], AERPC_A->entries[num - 1].entry, sizeof(char) * STRING_MAX);
-        // }
     }
     printf("finish sending\n\n");
+
     for (int i = 1; i <= connectserver_num; i++)
     {
-        // recv(sock[i], AERPC_R, sizeof(struct AppendEntriesRPC_Result), MSG_WAITALL);
         my_recv(sock[i], AERPC_R, sizeof(struct AppendEntriesRPC_Result));
     }
 
@@ -65,9 +69,9 @@ int AppendEntriesRPC(
         else
         {
             printf("failure0\n");
-            L_VS->nextIndex[i] -= (ONCE_SEND_ENTRIES - 1);
-            AERPC_A->prevLogIndex -= (ONCE_SEND_ENTRIES - 1);
-            AppendEntriesRPC(connectserver_num, sock, AERPC_A, AERPC_R, L_VS, AS_VS, AS_PS);
+            // L_VS->nextIndex[i] -= (ONCE_SEND_ENTRIES - 1);
+            // AERPC_A->prevLogIndex -= (ONCE_SEND_ENTRIES - 1);
+            // AppendEntriesRPC(connectserver_num, sock, AERPC_A, AERPC_R, L_VS, AS_VS, AS_PS);
             printf("failure1\n");
             exit(1);
         }
@@ -206,8 +210,8 @@ ACCEPT:
     // 初期設定
     AERPC_A->term = 1;
     AERPC_A->leaderID = 1;
-    AERPC_A->prevLogIndex = 0;
-    AERPC_A->prevLogTerm = 0;
+    AERPC_A->prevLogIndex[0] = 0;
+    AERPC_A->prevLogTerm[0] = 0;
     AERPC_A->leaderCommit = 0;
 
     AS_PS->currentTerm = 1;
@@ -252,9 +256,7 @@ ACCEPT:
         {
             // clientから受け取り
             my_recv(sock_client, AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].entry, sizeof(char) * STRING_MAX);
-            /* log[0]には入れない。log[1]から始める。　first index is 1*/
-            // AERPC_A->entries[0] = str;
-            // strcpy(AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].entry, str);
+
             AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].term = AS_PS->currentTerm;
         }
         write_log(i, AS_PS);
@@ -278,7 +280,6 @@ ACCEPT:
         t = ts2.tv_sec - ts1.tv_sec + (ts2.tv_nsec - ts1.tv_nsec) / 1e9;
 
         // fprintf(timerec, "%.4f\n", t);
-        // // fwrite(&t, sizeof(double), 1, timerec);
         // printf("%.4f\n", t);
     }
 

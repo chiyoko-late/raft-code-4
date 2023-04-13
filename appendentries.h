@@ -43,8 +43,8 @@ struct AppendEntriesRPC_Argument
 {
     int term;
     int leaderID;
-    int prevLogIndex;
-    int prevLogTerm;
+    int prevLogIndex[ONCE_SEND_ENTRIES];
+    int prevLogTerm[ONCE_SEND_ENTRIES];
     int leaderCommit;
     struct append_entries entries[ONCE_SEND_ENTRIES];
 };
@@ -118,17 +118,8 @@ void write_log(
     int i,
     struct AllServer_PersistentState *AS_PS)
 {
-
-    // for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
-    // {
-    // fwrite(&AS_PS->currentTerm, sizeof(int), 1, logfile);
-    // fwrite(&AS_PS->voteFor, sizeof(int), 1, logfile);
-    // fwrite(&AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].term, sizeof(int), 1, logfile);
-    // fwrite(&AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].entry, sizeof(char), STRING_MAX, logfile);
-
     write(fdo, AS_PS, sizeof(struct AllServer_PersistentState));
     fsync(fdo);
-    // }
     return;
 }
 
@@ -139,19 +130,9 @@ void read_log(
     struct AllServer_PersistentState *AS_PS = malloc(sizeof(struct AllServer_PersistentState));
 
     lseek(fdo, sizeof(struct AllServer_PersistentState) * (i - 1), SEEK_SET);
-    // for (int j = 1; j < i; j++)
-    // {
-    // lseek(fdo, sizeof(struct AllServer_PersistentState) * j, SEEK_CUR);
-    // }
-    // for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
-    // {
-    // fread(&(AS_PS->currentTerm), sizeof(int), 1, logfile);
-    // fread(&(AS_PS->voteFor), sizeof(int), 1, logfile);
-    // fread(&(AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].term), sizeof(int), 1, logfile);
 
-    // fread(&(AS_PS->log[(i - 1) * (ONCE_SEND_ENTRIES - 1) + num].entry), sizeof(char), STRING_MAX, logfile);
     read(fdo, AS_PS, sizeof(struct AllServer_PersistentState));
-    // }
+
     for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
     {
         printf("[logfile] AS_PS->currentTerm = %d\n", AS_PS->currentTerm);
@@ -171,8 +152,8 @@ void output_AERPC_A(struct AppendEntriesRPC_Argument *p)
     {
         printf("entry: %s\n", p->entries[i - 1].entry);
     }
-    printf("prevLogIndex: %d\n", p->prevLogIndex);
-    printf("prevLogTerm: %d\n", p->prevLogTerm);
+    printf("prevLogIndex: %d-%d\n", p->prevLogIndex[0], p->prevLogIndex[ONCE_SEND_ENTRIES - 1]);
+    printf("prevLogTerm: %d-%d\n", p->prevLogTerm[0], p->prevLogIndex[ONCE_SEND_ENTRIES - 1]);
     printf("LeaderCommitIndex: %d\n", p->leaderCommit);
     printf("----------------------\n");
     return;

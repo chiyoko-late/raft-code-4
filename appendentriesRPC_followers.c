@@ -17,27 +17,33 @@ int consistency_check(
     }
 
     // 2. Reply false if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
-    if (rpc->prevLogTerm != as_ps->log[rpc->prevLogIndex].term)
+    for (int i = 0; i < ONCE_SEND_ENTRIES; i++)
     {
-        printf("reject2,%d,%d\n", rpc->prevLogTerm, as_ps->log[rpc->prevLogIndex].term);
-        return false;
+        if (rpc->prevLogTerm[i] != as_ps->log[rpc->prevLogIndex[i]].term)
+        {
+            printf("reject2,%d,%d\n", rpc->prevLogTerm[i], as_ps->log[rpc->prevLogIndex[i]].term);
+            return false;
+        }
     }
 
     // 3. If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
-    if (strcmp(as_ps->log[rpc->prevLogIndex + 1].entry, as_ps->log[0].entry) == -1 && as_ps->log[rpc->prevLogIndex + 1].term != rpc->term)
+    for (int i = 0; i < ONCE_SEND_ENTRIES; i++)
     {
-        printf("reject3.0\n");
-        int j = strcmp(as_ps->log[rpc->prevLogIndex + 1].entry, as_ps->log[0].entry);
-
-        while (j == 0)
+        if (strcmp(as_ps->log[rpc->prevLogIndex[i] + 1].entry, as_ps->log[i].entry) == -1 && as_ps->log[rpc->prevLogIndex[i] + 1].term != rpc->term)
         {
-            for (int i = rpc->prevLogIndex + 1; i < ONCE_SEND_ENTRIES; i++)
+            printf("reject3.0\n");
+            int j = strcmp(as_ps->log[rpc->prevLogIndex[i] + 1].entry, as_ps->log[0].entry);
+
+            while (j == 0)
             {
-                memset(as_ps->log[rpc->prevLogIndex + 1].entry, 0, sizeof(char) * STRING_MAX);
+                for (int k = rpc->prevLogIndex[k] + 1; k < ONCE_SEND_ENTRIES; k++)
+                {
+                    memset(as_ps->log[rpc->prevLogIndex[i] + 1].entry, 0, sizeof(char) * STRING_MAX);
+                }
             }
+            printf("reject3\n");
+            return false;
         }
-        printf("reject3\n");
-        return false;
     }
 
     // printf("rpc->prevLogIndex = %d\n", rpc->prevLogIndex);
@@ -46,13 +52,14 @@ int consistency_check(
     for (int num = 1; num < ONCE_SEND_ENTRIES; num++)
     {
         // as_ps->log[rpc->prevLogIndex + 1].term = rpc->term;
-        as_ps->log[rpc->prevLogIndex + num].term = rpc->term;
-        strcpy(as_ps->log[rpc->prevLogIndex + num].entry, rpc->entries[num - 1].entry);
+        as_ps->log[rpc->prevLogIndex[num] + num].term = rpc->term;
+        strcpy(as_ps->log[rpc->prevLogIndex[num] + num].entry, rpc->entries[num - 1].entry);
     }
 
-    as_vs->LastAppliedIndex = rpc->prevLogIndex + ONCE_SEND_ENTRIES;
+    // pc->prevLogIndex[ONCE_SEND_ENTRIES-1] は前のグループの一番後ろ
+    as_vs->LastAppliedIndex = rpc->prevLogIndex[ONCE_SEND_ENTRIES - 1] + ONCE_SEND_ENTRIES;
     /* log記述 */
-    write_log(rpc->prevLogIndex / (ONCE_SEND_ENTRIES - 1) + 1, as_ps);
+    write_log(rpc->prevLogIndex[ONCE_SEND_ENTRIES - 1] / (ONCE_SEND_ENTRIES - 1) + 1, as_ps);
     // read_log(rpc->prevLogIndex / (ONCE_SEND_ENTRIES - 1) + 1);
 
     // 5. If leaderCmakeommit> commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
@@ -77,12 +84,10 @@ int transfer(
     printf("try-recv\n");
     my_recv(sock, AERPC_A, sizeof(struct AppendEntriesRPC_Argument));
     printf("Receiving AppendEntriesRPC is success.\n");
-    //     // recv(sock, AERPC_A->entries[num - 1], sizeof(char) * MAX, MSG_WAITALL);
-    //     my_recv(sock, AERPC_A->entries[num - 1].entry, sizeof(char) * STRING_MAX);
-    // }
+
     // output_AERPC_A(AERPC_A);
 
-    // consistency check
+    /* consistency check */
     // clock_gettime(CLOCK_MONOTONIC, &ts1);
     AERPC_R->success = consistency_check(AERPC_A, AS_PS, AS_VS);
     // clock_gettime(CLOCK_MONOTONIC, &ts2);

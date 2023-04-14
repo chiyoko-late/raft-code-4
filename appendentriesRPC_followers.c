@@ -1,3 +1,9 @@
+// ./ followers 1234 flog1
+// ./ followers 2345 flog2
+// ./ followers 3456 flog3
+// ./ followers 4567 flog4
+// ./ followers 5678 flog5
+
 #include "appendentries.h"
 #include "debug.h"
 

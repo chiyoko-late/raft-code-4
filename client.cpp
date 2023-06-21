@@ -45,11 +45,7 @@ int main(int argc, char *argv[])
     my_send(sock, &k, sizeof(int) * 1);
     printf("Finish connect with leader!\n");
 
-    // char *str = malloc(sizeof(char) * STRING_MAX);
     char *str = new char[STRING];
-    // std::string str;
-    // struct append_entry *request = new struct append_entry;
-    // struct AppendEntriesRPC_Argument *rpc = new struct AppendEntriesRPC_Argument;
     int result;
 
     // 時間記録用ファイル

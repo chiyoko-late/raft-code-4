@@ -217,8 +217,6 @@ ACCEPT:
         L_VS->matchIndex[i] = 0;
     }
 
-    // char *str = malloc(sizeof(char) * STRING_MAX);
-    // std::vector<char> str(STRING_MAX);
     int replicatelog_num;
 
     /* log記述用のファイル名 */

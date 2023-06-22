@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         printf("%d回目\n", i);
         /* leaderに送る */
         clock_gettime(CLOCK_MONOTONIC, &ts1);
-        for (int i = 1; i < ENTRY_NUM; i++)
+        for (int i = 0; i < ENTRY_NUM; i++)
         {
             my_send(sock, str, sizeof(char) * STRING);
         }

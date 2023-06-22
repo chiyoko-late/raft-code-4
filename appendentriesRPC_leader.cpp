@@ -17,7 +17,7 @@ int AppendEntriesRPC(
     /* AERPC_Aの設定 */
 
     AERPC_A->term = AS_PS->currentTerm;
-    AERPC_A->prevLogIndex = AS_PS->log.index;
+    AERPC_A->prevLogIndex = AS_PS->log.index - 1;
     AERPC_A->prevLogTerm = AS_PS->log.term;
     AERPC_A->leaderCommit = AS_VS->commitIndex;
     AERPC_A->entries = AS_PS->log.entries;
@@ -240,8 +240,11 @@ ACCEPT:
         for (int k = 0; k < ENTRY_NUM; k++)
         {
             // clientから受け取り
+            printf("%d\n", k);
             my_recv(sock_client, &AS_PS->log.entries[k], sizeof(char) * STRING);
+            printf("resv\n");
         }
+        // exit(0);
         AS_PS->log.term = AS_PS->currentTerm;
         AS_PS->log.index = AS_PS->log.index + 1;
 

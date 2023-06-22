@@ -24,15 +24,15 @@ int consistency_check(
 
     // 2. Reply false if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
 
-    if (as_ps->log.term < rpc->prevLogTerm)
+    if (as_ps->log.index < rpc->prevLogIndex)
     {
-        printf("reject2,%d,%d\n", rpc->prevLogTerm, as_ps->log.term);
+        printf("reject2,%d,%d\n", rpc->prevLogIndex, as_ps->log.index);
         return false;
     }
 
     // 3. If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
     // 4. Append any new entries not already in the log
-    else if (as_ps->log.term > rpc->prevLogTerm)
+    else if (as_ps->log.index > rpc->prevLogIndex)
     {
         int read_index, read_term;
         read_prev(rpc->prevLogIndex, &read_index, &read_term);
@@ -54,7 +54,7 @@ int consistency_check(
     }
     // printf("rpc->prevLogIndex = %d\n", rpc->prevLogIndex);
 
-    // if (as_ps->log.term == rpc->prevLogTerm)
+    // if (as_ps->log.index == rpc->prevLogIndex)
     else
     {
         as_ps->log.term = rpc->term;
